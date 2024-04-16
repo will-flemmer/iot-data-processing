@@ -9,11 +9,11 @@ Sends data to the central server every 5 seconds. The data looks like this:
 {
   sensor_serial_number: "1", //max of length 8
   data: [
-    { datetime: 2024-04-14T10:38:30.622Z, temp_c: 20.0 },
-    { datetime: 2024-04-14T10:39:30.622Z, temp_c: 20.5 },
-    { datetime: 2024-04-14T10:40:30.622Z, temp_c: 20.5 },
-    { datetime: 2024-04-14T10:41:30.622Z, temp_c: 20.5 },
-    { datetime: 2024-04-14T10:42:30.622Z, temp_c: 20.5 },
+    { datetime: "2024-04-14T10:38:30.622Z", temp_c: 20.0 },
+    { datetime: "2024-04-14T10:39:30.622Z", temp_c: 20.5 },
+    { datetime: "2024-04-14T10:40:30.622Z", temp_c: 20.5 },
+    { datetime: "2024-04-14T10:41:30.622Z", temp_c: 20.5 },
+    { datetime: "2024-04-14T10:42:30.622Z", temp_c: 20.5 },
   ]
 }
 ```

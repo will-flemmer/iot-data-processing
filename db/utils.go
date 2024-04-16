@@ -4,20 +4,33 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 
 	"iot-data-processing/broker"
-	"os"
+
+	"path/filepath"
+	"runtime"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
+type SensorDataDbRow struct {
+	TempC float32
+	Datetime string
+	SensorId string
+}
+
 
 func getDBName() string {
+	var (
+		_, b, _, _ = runtime.Caller(0)
+		basepath   = filepath.Dir(b)
+	)
 	env := os.Getenv("ENV")
 	if env == "test" {
-		return "db/test_sql.db"
+		return fmt.Sprintf("%s/test_sql.db", basepath)
 	}
-	return "db/dev_sql.db"
+	return fmt.Sprintf("%s/dev_sql.db", basepath)
 }
 
 // It is the responsibility of the calling function to
@@ -32,14 +45,14 @@ func GetDBHandle() *sql.DB {
 }
 
 
-func InsertSensorData(data *broker.SensorDatafile, db *sql.DB, sensor_serial_number string) {
+func InsertSensorData(data *broker.SensorDatafile, db *sql.DB) {
 	tx, err := db.Begin()
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	sql := fmt.Sprintf("INSERT INTO %s(datetime, temp_c, sensor_serial_number) VALUES(?, ?, ?)", SENSOR_TABLE)
+	sql := fmt.Sprintf("INSERT INTO %s(datetime, temp_c, sensor_serial_number) VALUES(?, ?, ?)", SENSOR_DATA_TABLE)
 	stmt, err := db.Prepare(sql)
 
 	if err != nil {
@@ -48,7 +61,6 @@ func InsertSensorData(data *broker.SensorDatafile, db *sql.DB, sensor_serial_num
 	defer stmt.Close()
 
 	for _, dataPoint := range data.Data {
-		// start a transaction?
 		_, err = stmt.Exec(dataPoint.Datetime, dataPoint.TempC, data.SensorId)
 		if err != nil {
 			log.Fatal(err)
