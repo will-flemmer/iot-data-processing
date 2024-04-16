@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"iot-data-processing/broker"
+	"iot-data-processing/db"
 	"iot-data-processing/http_server"
 )
 
@@ -20,6 +21,7 @@ func (simulator Simulator) Print() string {
 }
 
 func main() {
+	db.Setup()
 	go http_server.StartHttpServer()
 	go broker.StartBroker()
 	var out string
