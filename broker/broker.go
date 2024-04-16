@@ -1,8 +1,12 @@
 package broker
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"iot-data-processing/async_jobs"
+	"iot-data-processing/db"
+	"iot-data-processing/types"
 	"log"
 	"net"
 	"os"
@@ -16,6 +20,7 @@ const (
 
 func StartBroker() {
 	l, err := net.Listen(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
+	db_handle := db.GetDBHandle()
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
@@ -29,24 +34,14 @@ func StartBroker() {
 			fmt.Println("Error accepting: ", err.Error())
 			os.Exit(1)
 		}
-		go handleRequest(conn)
+		go handleRequest(conn, db_handle)
 	}
 }
 
-type SensorData struct {
-	Datetime string  `json:"datetime"`
-	TempC    float32 `json:"temp_c"`
-}
 
-type SensorDatafile struct {
-	SensorId string `json:"sensor_id"`
-	Data     []SensorData `json:"data"`
-}
-
-// This will fire the various jobs
-func handleRequest(conn net.Conn) {
+func handleRequest(conn net.Conn, db_handle *sql.DB) {
 	buf := make([]byte, 1024)
-	var input SensorDatafile
+	var input types.SensorDatafile
 
 	length, err := conn.Read(buf)
 	if err != nil {
@@ -58,8 +53,9 @@ func handleRequest(conn net.Conn) {
 		log.Panic("could not unmarshal data:", err.Error())
 	}
 
-	// 1. insert data into db
-	// 2. kick off jobs
+	db.InsertSensorData(&input, db_handle)
+
+	go async_jobs.AnalysisJob()
 
 	returnString := fmt.Sprintf("Data saved, jobs started: %s", buf[:int(length)])
 	conn.Write([]byte(returnString))

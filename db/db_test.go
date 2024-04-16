@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"iot-data-processing/broker"
+	"iot-data-processing/types"
 	"log"
 	"os"
 	"path/filepath"
@@ -86,11 +86,11 @@ func TestInsertSensorData(t *testing.T) {
 	dropDB()
 	Setup()
 	db := GetDBHandle()
-	d := []broker.SensorData{
+	d := []types.SensorData{
 		{ Datetime: "2024-04-14T10:38:30.622Z", TempC: 23.2 },
 		{ Datetime: "2024-04-14T10:39:30.622Z", TempC: 26.3 },
 	}
-	s := broker.SensorDatafile{ SensorId: "123", Data: d }
+	s := types.SensorDatafile{ SensorId: "123", Data: d }
 	InsertSensorData(&s, db)
 
 	rows, err := db.Query("SELECT datetime,temp_c,sensor_serial_number FROM sensor_data ORDER BY datetime;")
@@ -100,9 +100,9 @@ func TestInsertSensorData(t *testing.T) {
 	defer rows.Close()
 
 	// var storedValues []broker.SensorData
-	var allRows []SensorDataDbRow
+	var allRows []types.SensorDataDbRow
 	for rows.Next() {
-		var r SensorDataDbRow
+		var r types.SensorDataDbRow
 		rows.Scan(&r.Datetime, &r.TempC, &r.SensorId)
 		allRows = append(allRows, r)
 	}

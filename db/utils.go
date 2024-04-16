@@ -6,20 +6,13 @@ import (
 	"log"
 	"os"
 
-	"iot-data-processing/broker"
+	"iot-data-processing/types"
 
 	"path/filepath"
 	"runtime"
 
 	_ "github.com/mattn/go-sqlite3"
 )
-
-type SensorDataDbRow struct {
-	TempC float32
-	Datetime string
-	SensorId string
-}
-
 
 func getDBName() string {
 	var (
@@ -45,7 +38,7 @@ func GetDBHandle() *sql.DB {
 }
 
 
-func InsertSensorData(data *broker.SensorDatafile, db *sql.DB) {
+func InsertSensorData(data *types.SensorDatafile, db *sql.DB) {
 	tx, err := db.Begin()
 	if err != nil {
 		log.Fatal(err)
