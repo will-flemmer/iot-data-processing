@@ -27,7 +27,7 @@ func StartBroker() {
 	}
 
 	defer l.Close()
-	fmt.Println("Listening on " + CONN_HOST + ":" + CONN_PORT)
+	fmt.Println("Broker listening on " + CONN_HOST + ":" + CONN_PORT)
 	for {
 		conn, err := l.Accept()
 		if err != nil {

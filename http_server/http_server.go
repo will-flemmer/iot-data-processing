@@ -40,7 +40,7 @@ func handleRootPath(w http.ResponseWriter, _ *http.Request) {
 }
 
 func StartHttpServer() {
-	fmt.Println("hello world")
+	fmt.Println("Starting http server")
 	http.HandleFunc("/", handleRootPath)
 	http.ListenAndServe(":8080", nil)
 }
