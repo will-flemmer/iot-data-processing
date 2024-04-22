@@ -42,18 +42,6 @@ func TestSetupReturnsDbHandle(t *testing.T) {
 	}
 }
 
-func TestGetDBHandle(t *testing.T) {
-	dropDB()
-	db := GetDBHandle()
-	if reflect.TypeOf(db) != reflect.TypeOf((*sql.DB)(nil)) {
-		t.Fatal("Setup should return a db handle")
-	}
-	is_closed_err := db.Ping()
-	if is_closed_err != nil {
-		t.Fatal(is_closed_err)
-	}
-}
-
 func TestSetupCreatesCorrectTables(t *testing.T) {
 	dropDB()
 	Setup()
@@ -64,7 +52,7 @@ func TestSetupCreatesCorrectTables(t *testing.T) {
 	}
 	defer rows.Close()
 
-	expectedTableNames := []string{"sensors", "sensor_data", "sqlite_sequence"}
+	expectedTableNames := []string{"sensors", "sensor_data", "sqlite_sequence", "aggregate_metrics"}
 	var tableNames []string
 	for rows.Next() {
 		var name string
@@ -85,21 +73,21 @@ func TestSetupCreatesCorrectTables(t *testing.T) {
 func TestInsertSensorData(t *testing.T) {
 	dropDB()
 	Setup()
-	db := GetDBHandle()
+	db := NewDbMethods()
 	d := []types.SensorData{
 		{ Datetime: "2024-04-14T10:38:30.622Z", TempC: 23.2 },
 		{ Datetime: "2024-04-14T10:39:30.622Z", TempC: 26.3 },
 	}
 	s := types.SensorDatafile{ SensorId: "123", Data: d }
-	InsertSensorData(&s, db)
+	db.InsertSensorData(&s)
 
-	rows, err := db.Query("SELECT datetime,temp_c,sensor_serial_number FROM sensor_data ORDER BY datetime;")
+	new_db_handle := GetDBHandle()
+	rows, err := new_db_handle.Query("SELECT datetime,temp_c,sensor_id FROM sensor_data ORDER BY datetime;")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer rows.Close()
 
-	// var storedValues []broker.SensorData
 	var allRows []types.SensorDataDbRow
 	for rows.Next() {
 		var r types.SensorDataDbRow

@@ -1,7 +1,6 @@
 package broker
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"iot-data-processing/async_jobs"
@@ -20,7 +19,7 @@ const (
 
 func StartBroker() {
 	l, err := net.Listen(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
-	db_handle := db.GetDBHandle()
+	db_handle := db.NewDbMethods()
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
@@ -39,23 +38,24 @@ func StartBroker() {
 }
 
 
-func handleRequest(conn net.Conn, db_handle *sql.DB) {
+func handleRequest(conn net.Conn, db_handle *db.DBMethods) {
 	buf := make([]byte, 1024)
-	var input types.SensorDatafile
+	var sensor_data_file types.SensorDatafile
 
 	length, err := conn.Read(buf)
 	if err != nil {
 		fmt.Println("Error reading:", err.Error())
 	}
 
-	err = json.Unmarshal(buf[:length], &input)
+	err = json.Unmarshal(buf[:length], &sensor_data_file)
 	if err != nil {
 		log.Panic("could not unmarshal data:", err.Error())
 	}
 
-	db.InsertSensorData(&input, db_handle)
+	// db_handle.InsertSensorData(&sensor_data_file)
 
-	go async_jobs.AnalysisJob()
+	go async_jobs.AlertingJob(&sensor_data_file, db_handle)
+	go async_jobs.AnalysisJob(&sensor_data_file, db_handle)
 
 	returnString := fmt.Sprintf("Data saved, jobs started: %s", buf[:int(length)])
 	conn.Write([]byte(returnString))

@@ -5,7 +5,9 @@ type SensorData struct {
 	TempC    float32 `json:"temp_c"`
 }
 
+
 type SensorDatafile struct {
+	// SensorId should be a sensor serial number
 	SensorId string `json:"sensor_id"`
 	Data     []SensorData `json:"data"`
 }

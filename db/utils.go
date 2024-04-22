@@ -37,16 +37,27 @@ func GetDBHandle() *sql.DB {
 	return db
 }
 
+type DBMethods struct {
+	dbHandle *sql.DB
+}
 
-func InsertSensorData(data *types.SensorDatafile, db *sql.DB) {
-	tx, err := db.Begin()
+func NewDbMethods() *DBMethods {
+	db := DBMethods{
+		dbHandle: GetDBHandle(),
+	}
+	return &db
+}
+
+
+func (db DBMethods) InsertSensorData(data *types.SensorDatafile) {
+	tx, err := db.dbHandle.Begin()
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	sql := fmt.Sprintf("INSERT INTO %s(datetime, temp_c, sensor_serial_number) VALUES(?, ?, ?)", SENSOR_DATA_TABLE)
-	stmt, err := db.Prepare(sql)
+	sql := fmt.Sprintf("INSERT INTO %s(datetime, temp_c, sensor_id) VALUES(?, ?, ?)", SENSOR_DATA_TABLE)
+	stmt, err := db.dbHandle.Prepare(sql)
 
 	if err != nil {
 			log.Fatal(err)
@@ -65,4 +76,19 @@ func InsertSensorData(data *types.SensorDatafile, db *sql.DB) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+
+func (db *DBMethods) GetSensorId(sensor_serial_number string) int32 {
+	sql := fmt.Sprintf("SELECT id FROM %s WHERE serial_number='%s' LIMIT 1;", SENSOR_TABLE, sensor_serial_number)
+	row := db.dbHandle.QueryRow(sql)
+
+	var id int32
+	err := row.Scan(&id)
+
+	if err != nil {
+		log.Panicf(err.Error())
+	}
+
+	return id
 }
